@@ -414,8 +414,8 @@ typedef struct {
   XML_Bool in_eldecl;
   CONTENT_SCAFFOLD *scaffold;
   size_t contentStringLen;
-  unsigned scaffSize;
-  unsigned scaffCount;
+  size_t scaffSize;
+  size_t scaffCount;
   int scaffLevel;
   int *scaffIndex;
 } DTD;
@@ -8191,18 +8191,9 @@ nextScaffoldPart(XML_Parser parser) {
     CONTENT_SCAFFOLD *temp;
     if (dtd->scaffold) {
       /* Detect and prevent integer overflow */
-      if (dtd->scaffSize > UINT_MAX / 2u) {
-        return -1;
-      }
-      /* Detect and prevent integer overflow.
-       * The preprocessor guard addresses the "always false" warning
-       * from -Wtype-limits on platforms where
-       * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
       if (dtd->scaffSize > SIZE_MAX / 2u / sizeof(CONTENT_SCAFFOLD)) {
         return -1;
       }
-#endif
 
       temp = REALLOC(parser, dtd->scaffold,
                      dtd->scaffSize * 2 * sizeof(CONTENT_SCAFFOLD));
@@ -8244,15 +8235,10 @@ build_model(XML_Parser parser) {
   XML_Content *ret;
   XML_Char *str; /* the current string writing location */
 
-  /* Detect and prevent integer overflow.
-   * The preprocessor guard addresses the "always false" warning
-   * from -Wtype-limits on platforms where
-   * sizeof(unsigned int) < sizeof(size_t), e.g. on x86_64. */
-#if UINT_MAX >= SIZE_MAX
+  /* Detect and prevent integer overflow. */
   if (dtd->scaffCount > SIZE_MAX / sizeof(XML_Content)) {
     return NULL;
   }
-#endif
   if (dtd->contentStringLen > SIZE_MAX / sizeof(XML_Char)) {
     return NULL;
   }
